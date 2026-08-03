@@ -51,7 +51,7 @@ export interface Todo {
   id: string;
   text: string;
   completed: boolean;
-  isToday: boolean;
+  category: string;
   createdAt: string;
 }
 

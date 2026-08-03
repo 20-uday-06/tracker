@@ -57,6 +57,6 @@ model Todo {
   id        String   @id @default(cuid())
   text      String
   completed Boolean  @default(false)
-  isToday   Boolean  @default(true)
+  category  String   @default("today")
   createdAt DateTime @default(now())
 }

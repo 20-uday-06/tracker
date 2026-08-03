@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 const prisma = new PrismaClient();
 
 export async function GET() {
@@ -15,7 +17,7 @@ export async function POST(req: Request) {
   const todo = await prisma.todo.create({
     data: {
       text: body.text,
-      isToday: body.isToday !== undefined ? body.isToday : true,
+      category: body.category || "today",
     },
   });
   return NextResponse.json(todo);
@@ -23,12 +25,12 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const body = await req.json();
-  const { id, completed, isToday, text } = body;
+  const { id, completed, category, text } = body;
   const todo = await prisma.todo.update({
     where: { id },
     data: {
       ...(completed !== undefined && { completed }),
-      ...(isToday !== undefined && { isToday }),
+      ...(category !== undefined && { category }),
       ...(text !== undefined && { text }),
     },
   });
