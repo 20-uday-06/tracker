@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Flame, BookOpen, Clock, Target, Plus, TrendingUp, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import {
@@ -61,16 +61,15 @@ export default function DashboardPage() {
   const todayStats = getTodayStats(problems, sessions);
   const heatmapData = getHeatmapData(problems, sessions);
 
-  // Separate Timer Focus vs Problem Focus for today
   const todayStr = format(new Date(), "yyyy-MM-dd");
   let timerFocus = 0;
   let problemFocus = 0;
   sessions.forEach((s: StudySession) => {
-    if (s.date.startsWith(todayStr) && s.source === "Timer") timerFocus += s.duration;
+    if (format(parseISO(s.date), "yyyy-MM-dd") === todayStr && s.source === "Timer") timerFocus += s.duration;
   });
   problems.forEach((p: Problem) => {
     p.attempts.forEach((a) => {
-      if (a.attemptedAt.startsWith(todayStr) && a.timeSpent) problemFocus += a.timeSpent;
+      if (format(parseISO(a.attemptedAt), "yyyy-MM-dd") === todayStr && a.timeSpent) problemFocus += a.timeSpent;
     });
   });
 
