@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Problem {
+  id         String     @id @default(cuid())
+  title      String
+  platform   String     // LeetCode | Codeforces | CSES | Other
+  source     String     // NeetCode150 | StriverSDE | CP31 | CSES | Custom
+  topics     String     @default("[]") // JSON array stored as string
+  difficulty String?    // Easy | Medium | Hard
+  cfRating   Int?       // 800–1700+ for Codeforces
+  url        String?
+  createdAt  DateTime   @default(now())
+  attempts   Attempt[]
+  reattempt  Reattempt?
+}
+
+model Attempt {
+  id           String   @id @default(cuid())
+  problemId    String
+  problem      Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  result       String   // Independent | Struggled | Hint | Solution
+  timeSpent    Int?     // minutes
+  learningNote String?
+  attemptedAt  DateTime @default(now())
+}
+
+model Reattempt {
+  id        String    @id @default(cuid())
+  problemId String    @unique
+  problem   Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model StudySession {
+  id        String   @id @default(cuid())
+  source    String   // NeetCode150 | StriverSDE | CP31 | Reattempt | Generic
+  duration  Int      // minutes
+  date      DateTime @default(now())
+}
+
+model DailyTarget {
+  id      String @id @default(cuid())
+  source  String @unique
+  minutes Int
+}
