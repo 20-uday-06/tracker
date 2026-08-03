@@ -14,7 +14,7 @@ import { ResultBadge, DifficultyBadge, PlatformBadge } from "@/components/shared
 import { DailyGrind } from "@/components/dashboard/DailyGrind";
 import { DayDetailPanel } from "@/components/dashboard/DayDetailPanel";
 import { WeeklyRecap } from "@/components/dashboard/WeeklyRecap";
-import type { DayActivity, Problem } from "@/lib/types";
+import type { DayActivity, Problem, StudySession } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function MetricCard({ icon: Icon, label, value, sub, color = "text-zinc-400", onClick }: {
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             sub={`${todayStats.totalProblems} total problems`}
             onClick={() => {
               const today = format(new Date(), "yyyy-MM-dd");
-              setSelectedDay({ data: heatmapData[today] || null, date: today });
+              setSelectedDay({ data: heatmapData.find(d => d.date === today) || null, date: today });
             }}
           />
           <MetricCard
