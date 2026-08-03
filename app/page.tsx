@@ -17,11 +17,17 @@ import { WeeklyRecap } from "@/components/dashboard/WeeklyRecap";
 import type { DayActivity, Problem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function MetricCard({ icon: Icon, label, value, sub, color = "text-zinc-400" }: {
-  icon: React.ElementType; label: string; value: string | number; sub?: string; color?: string;
+function MetricCard({ icon: Icon, label, value, sub, color = "text-zinc-400", onClick }: {
+  icon: React.ElementType; label: string; value: string | number; sub?: string; color?: string; onClick?: () => void;
 }) {
   return (
-    <div className="bg-[#111113] border border-zinc-800 rounded-lg px-5 py-4 flex flex-col gap-2 hover:border-zinc-700 transition-colors">
+    <div 
+      onClick={onClick}
+      className={cn(
+        "bg-[#111113] border border-zinc-800 rounded-lg px-5 py-4 flex flex-col gap-2 transition-colors",
+        onClick ? "cursor-pointer hover:border-zinc-600 hover:bg-zinc-800/30" : "hover:border-zinc-700"
+      )}
+    >
       <div className="flex items-center gap-2">
         <Icon className={cn("w-4 h-4", color)} />
         <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">{label}</span>
@@ -54,6 +60,19 @@ export default function DashboardPage() {
   const streak = calculateStreak(problems, sessions);
   const todayStats = getTodayStats(problems, sessions);
   const heatmapData = getHeatmapData(problems, sessions);
+
+  // Separate Timer Focus vs Problem Focus for today
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  let timerFocus = 0;
+  let problemFocus = 0;
+  sessions.forEach((s: StudySession) => {
+    if (s.date.startsWith(todayStr) && s.source === "Timer") timerFocus += s.duration;
+  });
+  problems.forEach((p: Problem) => {
+    p.attempts.forEach((a) => {
+      if (a.attemptedAt.startsWith(todayStr) && a.timeSpent) problemFocus += a.timeSpent;
+    });
+  });
 
   const greeting = getGreeting();
   const motivation = getMotivationalSuffix(streak.current);
@@ -123,12 +142,16 @@ export default function DashboardPage() {
             label="Problems Today"
             value={todayStats.problemsToday}
             sub={`${todayStats.totalProblems} total problems`}
+            onClick={() => {
+              const today = format(new Date(), "yyyy-MM-dd");
+              setSelectedDay({ data: heatmapData[today] || null, date: today });
+            }}
           />
           <MetricCard
             icon={Clock}
             label="Focus Today"
             value={formatMinutes(todayStats.focusMinutesToday)}
-            sub={`${streak.totalActiveDays} active days total`}
+            sub={`Timer: ${formatMinutes(timerFocus)} · Problems: ${formatMinutes(problemFocus)}`}
           />
           <MetricCard
             icon={Target}

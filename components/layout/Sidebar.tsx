@@ -12,15 +12,18 @@ import {
   Plus,
   Flame,
   Zap,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AddProblemDialog } from "@/components/problems/AddProblemDialog";
+import { FocusTimer } from "@/components/shared/FocusTimer";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/problems", label: "Problems", icon: BookOpen },
   { href: "/reattempt", label: "Reattempt", icon: RefreshCw },
+  { href: "/todos", label: "Todos", icon: CheckSquare },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/progress", label: "Progress", icon: TrendingUp },
 ];
@@ -80,7 +83,9 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom */}
-        <div className="px-3 pb-4 space-y-0.5 border-t border-zinc-800/60 pt-3">
+        <div className="mt-auto pt-3 pb-2 space-y-1">
+          <FocusTimer />
+          <div className="px-3 border-t border-zinc-800/60 pt-3 space-y-0.5">
           <Link
             href="/settings"
             className={cn(
@@ -101,6 +106,7 @@ export function Sidebar() {
               </kbd>{" "}
               for commands
             </p>
+          </div>
           </div>
         </div>
       </aside>

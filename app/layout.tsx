@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { TimerProvider } from "@/components/providers/TimerProvider";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 
 const inter = Inter({
@@ -33,13 +34,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} antialiased bg-[#09090b] text-zinc-50`}>
         <QueryProvider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden">
-              {children}
-            </main>
-          </div>
-          <CommandPalette />
+          <TimerProvider>
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar />
+              <main className="flex-1 overflow-y-auto">{children}</main>
+            </div>
+            <CommandPalette />
+          </TimerProvider>
         </QueryProvider>
       </body>
     </html>

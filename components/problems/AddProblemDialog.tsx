@@ -50,7 +50,6 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
   const [url, setUrl] = useState("");
   const [learningNote, setLearningNote] = useState("");
   const [reattemptDays, setReattemptDays] = useState<number | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -76,7 +75,6 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
     setUrl("");
     setLearningNote("");
     setReattemptDays(null);
-    setShowAdvanced(false);
     setError("");
   }, []);
 
@@ -361,19 +359,9 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
             </div>
           )}
 
-          {/* Advanced toggle */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-400 transition-colors"
-          >
-            <ChevronDown className={cn("w-3 h-3 transition-transform", showAdvanced && "rotate-180")} />
-            {showAdvanced ? "Hide" : "Show"} additional fields
-          </button>
-
-          {showAdvanced && (
-            <div className="space-y-3 animate-slide-up">
-              {/* URL */}
+          {/* Additional fields (URL & Learning Note) */}
+          <div className="space-y-3">
+            {/* URL */}
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
                   <LinkIcon className="w-3 h-3 inline mr-1" />Problem URL
@@ -401,7 +389,6 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
                 />
               </div>
             </div>
-          )}
 
           {error && (
             <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">

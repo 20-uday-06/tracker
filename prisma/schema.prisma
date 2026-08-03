@@ -52,3 +52,11 @@ model DailyTarget {
   source  String @unique
   minutes Int
 }
+
+model Todo {
+  id        String   @id @default(cuid())
+  text      String
+  completed Boolean  @default(false)
+  isToday   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
