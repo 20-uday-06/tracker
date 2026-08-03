@@ -10,12 +10,12 @@ export async function GET() {
 // POST /api/targets — upsert a target
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { source, minutes } = body;
+  const { source, count } = body;
 
   const target = await prisma.dailyTarget.upsert({
     where: { source },
-    update: { minutes: parseInt(minutes) },
-    create: { source, minutes: parseInt(minutes) },
+    update: { count: parseInt(count) },
+    create: { source, count: parseInt(count) },
   });
 
   return NextResponse.json(target);

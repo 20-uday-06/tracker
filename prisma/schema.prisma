@@ -50,7 +50,7 @@ model StudySession {
 model DailyTarget {
   id      String @id @default(cuid())
   source  String @unique
-  minutes Int
+  count   Int @default(0)
 }
 
 model Todo {

@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Save, Trash2, AlertTriangle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SOURCE_LABELS } from "@/lib/types";
-import { formatMinutes } from "@/lib/calculations";
 import type { DailyTarget } from "@/lib/types";
 
 const SOURCES = ["NeetCode150", "StriverSDE", "CP31", "Reattempt"];
@@ -23,19 +22,19 @@ export default function SettingsPage() {
     queryFn: () => fetch("/api/targets").then((r) => r.json()),
     onSuccess: (data: DailyTarget[]) => {
       const t: Record<string, string> = {};
-      for (const item of data) t[item.source] = String(Math.round(item.minutes / 60));
+      for (const item of data) t[item.source] = String(item.count);
       setTargets(t);
     },
   } as any);
 
   const handleSaveTargets = async () => {
     setSaving(true);
-    for (const [source, hours] of Object.entries(targets)) {
-      if (!hours) continue;
+    for (const [source, countStr] of Object.entries(targets)) {
+      if (!countStr) continue;
       await fetch("/api/targets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, minutes: parseInt(hours) * 60 }),
+        body: JSON.stringify({ source, count: parseInt(countStr) }),
       });
     }
     qc.invalidateQueries({ queryKey: ["targets"] });
@@ -62,8 +61,8 @@ export default function SettingsPage() {
         {/* Daily Targets */}
         <section className="bg-[#111113] border border-zinc-800 rounded-lg overflow-hidden">
           <div className="px-5 py-4 border-b border-zinc-800">
-            <h2 className="text-sm font-semibold text-zinc-100">Daily Time Targets</h2>
-            <p className="text-xs text-zinc-500 mt-1">Set daily hour targets per source. These drive the progress bars on your Dashboard.</p>
+            <h2 className="text-sm font-semibold text-zinc-100">Daily Problem Targets</h2>
+            <p className="text-xs text-zinc-500 mt-1">Set daily problem targets per source. These drive the progress bars on your Dashboard.</p>
           </div>
           <div className="px-5 py-4 space-y-4">
             {SOURCES.map((src) => {
@@ -75,16 +74,16 @@ export default function SettingsPage() {
                     <input
                       type="number"
                       min={0}
-                      max={12}
-                      step={0.5}
-                      value={targets[src] ?? (currentTarget ? Math.round(currentTarget.minutes / 60) : "")}
+                      max={100}
+                      step={1}
+                      value={targets[src] ?? (currentTarget ? currentTarget.count : "")}
                       onChange={(e) => setTargets((t) => ({ ...t, [src]: e.target.value }))}
                       placeholder="0"
                       className="w-20 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500/60 text-center font-mono-num"
                     />
-                    <span className="text-sm text-zinc-500">hours</span>
+                    <span className="text-sm text-zinc-500">problems</span>
                     {currentTarget && (
-                      <span className="text-xs text-zinc-600">({formatMinutes(currentTarget.minutes)} current)</span>
+                      <span className="text-xs text-zinc-600">({currentTarget.count} current)</span>
                     )}
                   </div>
                 </div>

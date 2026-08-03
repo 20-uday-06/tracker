@@ -85,10 +85,10 @@ async function main() {
 
   await prisma.dailyTarget.createMany({
     data: [
-      { source: "NeetCode150", minutes: 240 },
-      { source: "StriverSDE", minutes: 120 },
-      { source: "CP31", minutes: 180 },
-      { source: "Reattempt", minutes: 60 },
+      { source: "NeetCode150", count: 4 },
+      { source: "StriverSDE", count: 2 },
+      { source: "CP31", count: 3 },
+      { source: "Reattempt", count: 1 },
     ],
   });
 

@@ -39,7 +39,7 @@ export function DailyGrind({ problems, sessions, targets }: DailyGrindProps) {
 
   const targetMap: Record<string, number> = {};
   for (const t of targets) {
-    targetMap[t.source] = t.minutes;
+    targetMap[t.source] = t.count;
   }
 
   const activeSources = Array.from(
@@ -70,13 +70,13 @@ export function DailyGrind({ problems, sessions, targets }: DailyGrindProps) {
         {activeSources.map((src) => {
           const data = bySource[src] || { problems: 0, minutes: 0 };
           const target = targetMap[src];
-          const pct = target ? Math.min((data.minutes / target) * 100, 100) : null;
+          const pct = target ? Math.min((data.problems / target) * 100, 100) : null;
 
           return (
             <div key={src} className="bg-[#111113] border border-zinc-800 rounded-lg p-4 flex flex-col gap-3">
               <div className="flex justify-between items-start">
                 <p className="text-sm text-zinc-100 font-medium">{SOURCE_LABELS[src] || src}</p>
-                <p className="text-xs text-zinc-500 font-mono-num">{data.problems} logged</p>
+                <p className="text-xs text-zinc-500 font-mono-num">{data.minutes > 0 ? formatMinutes(data.minutes) : "0m"} logged</p>
               </div>
 
               {pct !== null ? (
@@ -86,10 +86,10 @@ export function DailyGrind({ problems, sessions, targets }: DailyGrindProps) {
                       "text-xs font-mono-num font-medium",
                       pct >= 100 ? "text-green-400" : pct >= 50 ? "text-indigo-400" : "text-zinc-300"
                     )}>
-                      {formatMinutes(data.minutes)}
+                      {data.problems}
                     </span>
                     <span className="text-xs font-mono-num text-zinc-500">
-                      / {formatMinutes(target!)}
+                      / {target} problems
                     </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
@@ -105,7 +105,7 @@ export function DailyGrind({ problems, sessions, targets }: DailyGrindProps) {
               ) : (
                 <div className="mt-auto">
                   <p className="text-xs text-zinc-500">
-                    {data.minutes > 0 ? formatMinutes(data.minutes) : "No target set"}
+                    {data.problems > 0 ? `${data.problems} problems solved` : "No target set"}
                   </p>
                 </div>
               )}

@@ -44,7 +44,7 @@ export interface StudySession {
 export interface DailyTarget {
   id: string;
   source: string;
-  minutes: number;
+  count: number;
 }
 
 export interface Todo {
