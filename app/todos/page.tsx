@@ -69,6 +69,11 @@ export default function TodosPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["todos"] }),
   });
 
+  const deleteCategory = useMutation({
+    mutationFn: (category: string) => fetch(`/api/todos?category=${category}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todos"] }),
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.trim()) return;
@@ -88,9 +93,9 @@ export default function TodosPage() {
   };
 
   const filteredTodos = todos.filter(t => {
-    if (activeTab === "all") return !t.completed;
+    if (activeTab === "all") return true;
     if (activeTab === "done") return t.completed;
-    return t.category === activeTab && !t.completed;
+    return t.category === activeTab;
   });
 
   return (
@@ -201,10 +206,24 @@ export default function TodosPage() {
             <TabButton active={activeTab === "tomorrow"} onClick={() => setActiveTab("tomorrow")} icon={CalendarClock} count={stats.tomorrowPrep}>
               Tomorrow / Next Day
             </TabButton>
-            <TabButton active={activeTab === "upcoming"} onClick={() => setActiveTab("upcoming")} icon={CalendarDays} count={todos.filter(t => t.category === "upcoming" && !t.completed).length}>
+            <TabButton active={activeTab === "upcoming"} onClick={() => setActiveTab("upcoming")} icon={CalendarDays} count={todos.filter(t => t.category === "upcoming").length}>
               Upcoming
             </TabButton>
             <div className="flex-1" />
+            
+            {activeTab !== "all" && activeTab !== "done" && filteredTodos.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete all tasks for ${activeTab}?`)) {
+                    deleteCategory.mutate(activeTab);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition-colors whitespace-nowrap"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete all {activeTab}
+              </button>
+            )}
+
             <TabButton active={activeTab === "done"} onClick={() => setActiveTab("done")} count={stats.completed}>
               Done
             </TabButton>

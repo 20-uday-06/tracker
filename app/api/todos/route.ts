@@ -41,9 +41,15 @@ export async function DELETE(req: Request) {
   const url = new URL(req.url);
   const all = url.searchParams.get("all");
   const id = url.searchParams.get("id");
+  const category = url.searchParams.get("category");
 
   if (all === "true") {
     await prisma.todo.deleteMany({});
+    return NextResponse.json({ deleted: true });
+  }
+
+  if (category) {
+    await prisma.todo.deleteMany({ where: { category } });
     return NextResponse.json({ deleted: true });
   }
 
@@ -52,5 +58,5 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ deleted: true });
   }
 
-  return NextResponse.json({ error: "Missing id or all param" }, { status: 400 });
+  return NextResponse.json({ error: "Missing id, category, or all param" }, { status: 400 });
 }
