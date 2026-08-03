@@ -47,6 +47,14 @@ export interface DailyTarget {
   minutes: number;
 }
 
+export interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  isToday: boolean;
+  createdAt: string;
+}
+
 export interface DayActivity {
   date: string;
   problems: number;
