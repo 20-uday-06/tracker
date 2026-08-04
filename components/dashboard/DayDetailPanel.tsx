@@ -3,7 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { X } from "lucide-react";
 import { ResultBadge, DifficultyBadge, PlatformBadge, SourceBadge } from "@/components/shared/ResultBadge";
-import { formatMinutes } from "@/lib/calculations";
+import { formatMinutes, getStudyDayKey } from "@/lib/calculations";
 import type { DayActivity, Problem } from "@/lib/types";
 import { SOURCE_LABELS } from "@/lib/types";
 
@@ -12,11 +12,12 @@ interface DayDetailPanelProps {
   activity: DayActivity | null;
   problems: Problem[];
   onClose: () => void;
+  dayStartHour?: number;
 }
 
-export function DayDetailPanel({ date, activity, problems, onClose }: DayDetailPanelProps) {
+export function DayDetailPanel({ date, activity, problems, onClose, dayStartHour = 0 }: DayDetailPanelProps) {
   const dayProblems = problems.filter((p) =>
-    p.attempts.some((a) => format(parseISO(a.attemptedAt), "yyyy-MM-dd") === date)
+    p.attempts.some((a) => getStudyDayKey(a.attemptedAt, dayStartHour) === date)
   );
 
   return (
@@ -65,7 +66,7 @@ export function DayDetailPanel({ date, activity, problems, onClose }: DayDetailP
             <p className="px-5 py-8 text-sm text-zinc-600 text-center">No problems on this day.</p>
           ) : (
             dayProblems.map((p) => {
-              const dayAttempt = p.attempts.find((a) => format(parseISO(a.attemptedAt), "yyyy-MM-dd") === date);
+              const dayAttempt = p.attempts.find((a) => getStudyDayKey(a.attemptedAt, dayStartHour) === date);
               return (
                 <div key={p.id} className="px-5 py-3.5">
                   <div className="flex items-start justify-between gap-3">

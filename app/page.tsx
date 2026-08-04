@@ -166,7 +166,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Daily Grind */}
-        <DailyGrind problems={problems} sessions={sessions} targets={targets ?? []} />
+        <DailyGrind problems={problems} sessions={sessions} targets={targets ?? []} dayStartHour={dayStartHour} />
 
         {/* Activity Heatmap */}
         <section>
@@ -271,6 +271,7 @@ export default function DashboardPage() {
           activity={selectedDay.data}
           problems={problems}
           onClose={() => setSelectedDay(null)}
+          dayStartHour={dayStartHour}
         />
       )}
     </div>

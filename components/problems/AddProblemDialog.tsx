@@ -21,10 +21,11 @@ const RESULT_OPTIONS: { value: Result; label: string; emoji: string; color: stri
 ];
 
 const REATTEMPT_PRESETS = [
-  { label: "+1 day", days: 1 },
-  { label: "+3 days", days: 3 },
-  { label: "+7 days", days: 7 },
-  { label: "+14 days", days: 14 },
+  { label: "+1d", days: 1 },
+  { label: "+3d", days: 3 },
+  { label: "+5d", days: 5 },
+  { label: "+7d", days: 7 },
+  { label: "+14d", days: 14 },
 ];
 
 interface AddProblemDialogProps {
@@ -333,11 +334,11 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
             </div>
           </div>
 
-          {/* Reattempt scheduling — shown if result is Hint or Solution */}
-          {(result === "Hint" || result === "Solution") && (
+          {/* Reattempt scheduling — shown for any result */}
+          {result && (
             <div className="rounded-lg border border-zinc-700/60 bg-zinc-900/40 p-3">
               <p className="text-xs text-zinc-400 mb-2">
-                <span className="text-orange-400 font-medium">Reattempt scheduled</span> — when should you retry?
+                <span className="text-orange-400 font-medium">Schedule Reattempt</span> — when should you retry? (optional)
               </p>
               <div className="flex gap-2 flex-wrap">
                 {REATTEMPT_PRESETS.map((preset) => (
@@ -348,13 +349,22 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
                     className={cn(
                       "px-3 py-1.5 rounded-md text-xs border transition-all",
                       reattemptDays === preset.days
-                        ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-400"
+                        ? "border-orange-500/50 bg-orange-500/15 text-orange-400"
                         : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600"
                     )}
                   >
                     {preset.label}
                   </button>
                 ))}
+                {reattemptDays && (
+                  <button
+                    type="button"
+                    onClick={() => setReattemptDays(null)}
+                    className="px-3 py-1.5 rounded-md text-xs border border-zinc-700 bg-zinc-800 text-zinc-600 hover:text-zinc-400 transition-all"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
           )}

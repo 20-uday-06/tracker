@@ -3,7 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { SOURCE_LABELS } from "@/lib/types";
-import { formatMinutes } from "@/lib/calculations";
+import { formatMinutes, getStudyDayKey, getTodayStudyKey } from "@/lib/calculations";
 import type { DailyTarget, Problem, StudySession } from "@/lib/types";
 import Link from "next/link";
 import { Edit3 } from "lucide-react";
@@ -14,15 +14,16 @@ interface DailyGrindProps {
   problems: Problem[];
   sessions: StudySession[];
   targets: DailyTarget[];
+  dayStartHour?: number;
 }
 
-export function DailyGrind({ problems, sessions, targets }: DailyGrindProps) {
-  const todayStr = format(new Date(), "yyyy-MM-dd");
+export function DailyGrind({ problems, sessions, targets, dayStartHour = 0 }: DailyGrindProps) {
+  const todayStr = getTodayStudyKey(dayStartHour);
 
   const bySource: Record<string, { problems: number; minutes: number }> = {};
   for (const p of problems) {
     for (const a of p.attempts) {
-      if (format(parseISO(a.attemptedAt), "yyyy-MM-dd") !== todayStr) continue;
+      if (getStudyDayKey(a.attemptedAt, dayStartHour) !== todayStr) continue;
       const src = p.source;
       if (!bySource[src]) bySource[src] = { problems: 0, minutes: 0 };
       bySource[src].problems++;
@@ -31,7 +32,7 @@ export function DailyGrind({ problems, sessions, targets }: DailyGrindProps) {
   }
 
   for (const s of sessions) {
-    if (format(parseISO(s.date), "yyyy-MM-dd") !== todayStr) continue;
+    if (getStudyDayKey(s.date, dayStartHour) !== todayStr) continue;
     const src = s.source;
     if (!bySource[src]) bySource[src] = { problems: 0, minutes: 0 };
     bySource[src].minutes += s.duration;
