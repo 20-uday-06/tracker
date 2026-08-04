@@ -7,7 +7,9 @@ import { useState } from "react";
 import {
   calculateStreak, getTodayStats, getHeatmapData,
   getGreeting, getMotivationalSuffix, formatMinutes,
+  getStudyDayKey, getTodayStudyKey,
 } from "@/lib/calculations";
+import { useDayStartHour } from "@/hooks/useDayStartHour";
 import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
 import { AddProblemDialog } from "@/components/problems/AddProblemDialog";
 import { ResultBadge, DifficultyBadge, PlatformBadge } from "@/components/shared/ResultBadge";
@@ -43,6 +45,7 @@ function MetricCard({ icon: Icon, label, value, sub, color = "text-zinc-400", on
 export default function DashboardPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<{ data: DayActivity | null; date: string } | null>(null);
+  const { hour: dayStartHour } = useDayStartHour();
 
   const { data, isLoading } = useQuery({
     queryKey: ["stats"],
@@ -57,19 +60,20 @@ export default function DashboardPage() {
   const problems: Problem[] = data?.problems ?? [];
   const sessions = data?.sessions ?? [];
 
-  const streak = calculateStreak(problems, sessions);
-  const todayStats = getTodayStats(problems, sessions);
-  const heatmapData = getHeatmapData(problems, sessions);
+  const streak = calculateStreak(problems, sessions, 1, 30, dayStartHour);
+  const todayStats = getTodayStats(problems, sessions, dayStartHour);
+  const heatmapData = getHeatmapData(problems, sessions, dayStartHour);
 
-  const todayStr = format(new Date(), "yyyy-MM-dd");
+  // Separate Timer Focus vs Problem Focus for today
+  const todayStr = getTodayStudyKey(dayStartHour);
   let timerFocus = 0;
   let problemFocus = 0;
   sessions.forEach((s: StudySession) => {
-    if (format(parseISO(s.date), "yyyy-MM-dd") === todayStr && s.source === "Timer") timerFocus += s.duration;
+    if (getStudyDayKey(s.date, dayStartHour) === todayStr && s.source === "Timer") timerFocus += s.duration;
   });
   problems.forEach((p: Problem) => {
     p.attempts.forEach((a) => {
-      if (format(parseISO(a.attemptedAt), "yyyy-MM-dd") === todayStr && a.timeSpent) problemFocus += a.timeSpent;
+      if (getStudyDayKey(a.attemptedAt, dayStartHour) === todayStr && a.timeSpent) problemFocus += a.timeSpent;
     });
   });
 

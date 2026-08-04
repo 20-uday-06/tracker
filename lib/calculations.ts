@@ -9,6 +9,22 @@ import {
 } from "date-fns";
 import type { Problem, Attempt, Result, TopicMastery, DayActivity } from "./types";
 
+/**
+ * Returns the "study day" key for a given date, respecting a custom day-start hour.
+ * For night-owls (e.g. dayStartHour=5): 4 AM Tuesday → counted as Monday ("yesterday's session").
+ * Default dayStartHour=0 means normal midnight boundary.
+ */
+export function getStudyDayKey(date: Date | string, dayStartHour: number = 0): string {
+  const d = typeof date === "string" ? parseISO(date) : date;
+  const adjusted = dayStartHour > 0 ? subDays(d, d.getHours() < dayStartHour ? 1 : 0) : d;
+  return format(adjusted, "yyyy-MM-dd");
+}
+
+/** Returns the "study day" key for right now (i.e. what "today" is for the user). */
+export function getTodayStudyKey(dayStartHour: number = 0): string {
+  return getStudyDayKey(new Date(), dayStartHour);
+}
+
 export function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -29,23 +45,24 @@ export function calculateStreak(
   problems: Problem[],
   sessions: { date: string; duration: number }[],
   minProblems = 1,
-  minMinutes = 30
+  minMinutes = 30,
+  dayStartHour = 0
 ): { current: number; longest: number; totalActiveDays: number } {
   const activeDaysSet = new Set<string>();
 
-  // Count problems per day
+  // Count problems per study-day
   const problemsByDay = new Map<string, number>();
   for (const p of problems) {
     for (const a of p.attempts) {
-      const dateKey = format(parseISO(a.attemptedAt), "yyyy-MM-dd");
+      const dateKey = getStudyDayKey(a.attemptedAt, dayStartHour);
       problemsByDay.set(dateKey, (problemsByDay.get(dateKey) || 0) + 1);
     }
   }
 
-  // Count session minutes per day
+  // Count session minutes per study-day
   const minutesByDay = new Map<string, number>();
   for (const s of sessions) {
-    const dateKey = format(parseISO(s.date), "yyyy-MM-dd");
+    const dateKey = getStudyDayKey(s.date, dayStartHour);
     minutesByDay.set(dateKey, (minutesByDay.get(dateKey) || 0) + s.duration);
   }
 
@@ -61,9 +78,10 @@ export function calculateStreak(
 
   const totalActiveDays = activeDaysSet.size;
 
-  // Calculate current streak
+  // Calculate current streak — use the user's "today" study key
+  const todayKey = getTodayStudyKey(dayStartHour);
   let current = 0;
-  let checkDate = startOfDay(new Date());
+  let checkDate = parseISO(todayKey);
   while (true) {
     const dateKey = format(checkDate, "yyyy-MM-dd");
     if (activeDaysSet.has(dateKey)) {
@@ -108,15 +126,19 @@ export function calculateStreak(
   return { current, longest, totalActiveDays };
 }
 
-export function getTodayStats(problems: Problem[], sessions: { source: string; duration: number; date: string }[]) {
-  const todayStr = format(new Date(), "yyyy-MM-dd");
+export function getTodayStats(
+  problems: Problem[],
+  sessions: { source: string; duration: number; date: string }[],
+  dayStartHour = 0
+) {
+  const todayStr = getTodayStudyKey(dayStartHour);
 
   const todayAttempts = problems.flatMap((p) =>
-    p.attempts.filter((a) => format(parseISO(a.attemptedAt), "yyyy-MM-dd") === todayStr)
+    p.attempts.filter((a) => getStudyDayKey(a.attemptedAt, dayStartHour) === todayStr)
   );
 
   const todayMinutes = sessions
-    .filter((s) => format(parseISO(s.date), "yyyy-MM-dd") === todayStr)
+    .filter((s) => getStudyDayKey(s.date, dayStartHour) === todayStr)
     .reduce((sum, s) => sum + s.duration, 0);
 
   const totalAttempts = problems.flatMap((p) => p.attempts);
@@ -133,14 +155,6 @@ export function getTodayStats(problems: Problem[], sessions: { source: string; d
     todayBySource[src].problems++;
     todayBySource[src].minutes += attempt.timeSpent || 0;
   }
-  // Also pull from sessions
-  const todaySessions = sessions.filter(
-    (s) => format(parseISO(s.date), "yyyy-MM-dd") === todayStr
-  );
-  for (const s of todaySessions) {
-    if (!todayBySource[s.source]) todayBySource[s.source] = { problems: 0, minutes: 0 };
-    // Don't double-count minutes if already accounted for
-  }
 
   return {
     problemsToday: todayAttempts.length,
@@ -153,13 +167,14 @@ export function getTodayStats(problems: Problem[], sessions: { source: string; d
 
 export function getHeatmapData(
   problems: Problem[],
-  sessions: { source: string; duration: number; date: string }[]
+  sessions: { source: string; duration: number; date: string }[],
+  dayStartHour = 0
 ): DayActivity[] {
   const activityMap = new Map<string, DayActivity>();
 
   for (const p of problems) {
     for (const a of p.attempts) {
-      const dateKey = format(parseISO(a.attemptedAt), "yyyy-MM-dd");
+      const dateKey = getStudyDayKey(a.attemptedAt, dayStartHour);
       if (!activityMap.has(dateKey)) {
         activityMap.set(dateKey, {
           date: dateKey,
@@ -179,7 +194,7 @@ export function getHeatmapData(
   }
 
   for (const s of sessions) {
-    const dateKey = format(parseISO(s.date), "yyyy-MM-dd");
+    const dateKey = getStudyDayKey(s.date, dayStartHour);
     if (!activityMap.has(dateKey)) {
       activityMap.set(dateKey, {
         date: dateKey,

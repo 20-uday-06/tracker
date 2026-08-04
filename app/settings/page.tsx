@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save, Trash2, AlertTriangle, Check, Loader2 } from "lucide-react";
+import { Save, Trash2, AlertTriangle, Check, Loader2, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SOURCE_LABELS } from "@/lib/types";
 import type { DailyTarget } from "@/lib/types";
+import { useDayStartHour } from "@/hooks/useDayStartHour";
 
 const SOURCES = ["NeetCode150", "StriverSDE", "CP31", "Reattempt"];
 
@@ -16,6 +17,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const { hour: dayStartHour, setHour: setDayStartHour } = useDayStartHour();
 
   const { data: currentTargets = [] } = useQuery<DailyTarget[]>({
     queryKey: ["targets"],
@@ -132,6 +134,41 @@ export default function SettingsPage() {
                 <li>6. Deploy via <code className="text-zinc-300 bg-zinc-800 px-1 rounded">vercel --prod</code> or GitHub integration</li>
               </ol>
             </div>
+          </div>
+        </section>
+
+        {/* Night Owl Setting */}
+        <section className="bg-[#111113] border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-800">
+            <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <Moon className="w-4 h-4 text-indigo-400" /> Night Owl Mode
+            </h2>
+            <p className="text-xs text-zinc-500 mt-1">
+              Set when your "study day" starts. If you study past midnight, any time before this hour is still counted as the previous day.
+            </p>
+          </div>
+          <div className="px-5 py-4 space-y-4">
+            <div className="grid grid-cols-5 gap-2">
+              {[0, 3, 4, 5, 6].map((h) => (
+                <button
+                  key={h}
+                  onClick={() => setDayStartHour(h)}
+                  className={cn(
+                    "py-2.5 rounded-lg text-sm font-semibold border transition-colors",
+                    dayStartHour === h
+                      ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300"
+                      : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                  )}
+                >
+                  {h === 0 ? "Off" : `${h} AM`}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-zinc-600">
+              {dayStartHour === 0
+                ? "Day resets at midnight (default)."
+                : `Day resets at ${dayStartHour}:00 AM — anything before ${dayStartHour} AM is counted as the previous day's session.`}
+            </p>
           </div>
         </section>
 
