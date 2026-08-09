@@ -142,7 +142,7 @@ export function getTodayStats(
     .reduce((sum, s) => sum + s.duration, 0);
 
   const totalAttempts = problems.flatMap((p) => p.attempts);
-  const independentCount = totalAttempts.filter((a) => a.result === "Independent").length;
+  const independentCount = totalAttempts.filter((a) => a.result === "Independent" || a.result === "Struggled").length;
   const independentRate =
     totalAttempts.length > 0 ? Math.round((independentCount / totalAttempts.length) * 100) : 0;
 
@@ -187,7 +187,7 @@ export function getHeatmapData(
       }
       const day = activityMap.get(dateKey)!;
       day.problems++;
-      if (a.result === "Independent") day.solvedIndependent++;
+      if (a.result === "Independent" || a.result === "Struggled") day.solvedIndependent++;
       day.results[a.result as Result]++;
       day.sources[p.source] = (day.sources[p.source] || 0) + 1;
     }
@@ -237,7 +237,7 @@ export function calculateTopicMastery(problems: Problem[]): TopicMastery[] {
       const isRecent = parseISO(latestAttempt.attemptedAt) > cutoff;
       if (isRecent) {
         t.recentTotal++;
-        if (latestAttempt.result === "Independent") t.recentIndependent++;
+        if (latestAttempt.result === "Independent" || latestAttempt.result === "Struggled") t.recentIndependent++;
       }
     }
   }
