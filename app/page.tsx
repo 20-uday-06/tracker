@@ -16,6 +16,8 @@ import { ResultBadge, DifficultyBadge, PlatformBadge } from "@/components/shared
 import { DailyGrind } from "@/components/dashboard/DailyGrind";
 import { DayDetailPanel } from "@/components/dashboard/DayDetailPanel";
 import { WeeklyRecap } from "@/components/dashboard/WeeklyRecap";
+import { WeekComparison } from "@/components/dashboard/WeekComparison";
+import { DailyReview } from "@/components/dashboard/DailyReview";
 import type { DayActivity, Problem, StudySession } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -167,6 +169,12 @@ export default function DashboardPage() {
 
         {/* Daily Grind */}
         <DailyGrind problems={problems} sessions={sessions} targets={targets ?? []} dayStartHour={dayStartHour} />
+
+        {/* Daily Review */}
+        <DailyReview problems={problems} />
+
+        {/* Week vs Last Week */}
+        <WeekComparison problems={problems} sessions={sessions} dayStartHour={dayStartHour} />
 
         {/* Activity Heatmap */}
         <section>

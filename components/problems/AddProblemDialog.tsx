@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Result, Platform, Source, Difficulty } from "@/lib/types";
 import { TOPICS, SOURCE_LABELS } from "@/lib/types";
 import { addDays, format } from "date-fns";
+import { NotesEditor } from "@/components/shared/NotesEditor";
 
 const PLATFORMS: Platform[] = ["LeetCode", "Codeforces", "CSES", "Other"];
 const SOURCES: Source[] = ["NeetCode150", "StriverSDE", "CP31", "CSES", "Custom"];
@@ -390,12 +391,10 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
                   Learning / Mistake
                 </label>
-                <textarea
+                <NotesEditor
                   value={learningNote}
-                  onChange={(e) => setLearningNote(e.target.value)}
-                  placeholder="What did you miss?"
-                  rows={3}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500/60 transition-colors resize-none"
+                  onChange={setLearningNote}
+                  rows={4}
                 />
               </div>
             </div>

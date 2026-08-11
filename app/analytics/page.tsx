@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
 import { format, parseISO, subDays, eachDayOfInterval, startOfWeek, endOfWeek, subWeeks } from "date-fns";
 import { calculateTopicMastery } from "@/lib/calculations";
@@ -72,7 +73,7 @@ export default function AnalyticsPage() {
     });
   }, [filteredAttempts, sessions, range]);
 
-  // Weekly independent rate trend
+  // Weekly independent rate trend (Struggled now counts as independent)
   const weeklyRateData = useMemo(() => {
     const weeks = [];
     for (let i = 7; i >= 0; i--) {
@@ -85,7 +86,7 @@ export default function AnalyticsPage() {
           return d >= weekStart && d <= weekEnd;
         });
       if (weekAttempts.length === 0) continue;
-      const rate = Math.round((weekAttempts.filter((a) => a.result === "Independent").length / weekAttempts.length) * 100);
+      const rate = Math.round((weekAttempts.filter((a) => a.result === "Independent" || a.result === "Struggled").length / weekAttempts.length) * 100);
       weeks.push({ week: `W${format(weekStart, "w")}`, rate, count: weekAttempts.length });
     }
     return weeks;
@@ -129,6 +130,18 @@ export default function AnalyticsPage() {
 
   // Topic mastery
   const topicMastery = useMemo(() => calculateTopicMastery(problems), [problems]);
+
+  // Radar chart data — top 8 topics by mastery score
+  const radarData = useMemo(() => {
+    return topicMastery
+      .slice(0, 8)
+      .map((t) => ({
+        topic: t.topic.length > 10 ? t.topic.slice(0, 10) + "…" : t.topic,
+        fullTopic: t.topic,
+        mastery: t.masteryScore,
+        rate: t.independentRate,
+      }));
+  }, [topicMastery]);
 
   const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="bg-[#111113] border border-zinc-800 rounded-lg overflow-hidden">
@@ -290,6 +303,54 @@ export default function AnalyticsPage() {
           </SectionCard>
 
         </div>
+
+        {/* Radar: Topic Mastery Visual */}
+        {radarData.length >= 3 && (
+          <SectionCard title="Topic Mastery Radar">
+            <div className="flex flex-col lg:flex-row gap-6 items-center">
+              <ResponsiveContainer width="100%" height={280}>
+                <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+                  <PolarGrid stroke="#27272a" />
+                  <PolarAngleAxis
+                    dataKey="topic"
+                    tick={{ fill: "#71717a", fontSize: 11 }}
+                  />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#3f3f46", fontSize: 9 }} tickCount={4} />
+                  <Radar name="Mastery" dataKey="mastery" stroke="#6366f1" fill="#6366f1" fillOpacity={0.15} strokeWidth={2} />
+                  <Radar name="Independence" dataKey="rate" stroke="#22c55e" fill="#22c55e" fillOpacity={0.1} strokeWidth={1.5} strokeDasharray="4 2" />
+                  <Tooltip
+                    contentStyle={CustomTooltipStyle}
+                    formatter={(v, name) => [`${v}%`, name]}
+                    labelFormatter={(label) => radarData.find((d) => d.topic === label)?.fullTopic || label}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+              <div className="lg:w-48 space-y-2 shrink-0">
+                <p className="text-xs text-zinc-500 mb-3">Legend</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-0.5 bg-indigo-500 rounded" />
+                  <span className="text-xs text-zinc-400">Mastery Score</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 border-t-2 border-dashed border-green-500" />
+                  <span className="text-xs text-zinc-400">Independence Rate</span>
+                </div>
+                <div className="mt-4 space-y-1.5">
+                  {radarData.filter((d) => d.mastery < 65).map((d) => (
+                    <div key={d.fullTopic} className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+                      <span className="text-[10px] text-orange-400 truncate">{d.fullTopic}</span>
+                      <span className="text-[10px] text-zinc-600 ml-auto">{d.mastery}%</span>
+                    </div>
+                  ))}
+                  {radarData.filter((d) => d.mastery < 65).length === 0 && (
+                    <p className="text-[10px] text-green-400">All topics looking good! 🎯</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </SectionCard>
+        )}
 
         {/* Topic Mastery */}
         <SectionCard title="Topic Mastery">

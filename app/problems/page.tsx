@@ -7,6 +7,7 @@ import { format, parseISO, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ResultBadge, DifficultyBadge, PlatformBadge, SourceBadge } from "@/components/shared/ResultBadge";
 import { AddProblemDialog } from "@/components/problems/AddProblemDialog";
+import { NotesRenderer } from "@/components/shared/NotesEditor";
 import type { Problem, Result } from "@/lib/types";
 import { TOPICS, SOURCE_LABELS } from "@/lib/types";
 
@@ -150,9 +151,11 @@ function NotesModal({ problem, onClose }: { problem: Problem; onClose: () => voi
                 </span>
               </div>
               {a.learningNote ? (
-                <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{a.learningNote}</p>
+                <div className="mt-2 border-l-2 border-zinc-700 pl-3">
+                  <NotesRenderer text={a.learningNote} />
+                </div>
               ) : (
-                <p className="text-xs text-zinc-600 italic">No notes for this attempt.</p>
+                <p className="text-xs text-zinc-600 italic mt-1">No notes for this attempt.</p>
               )}
             </div>
           ))}
