@@ -22,9 +22,13 @@ export function FocusTimer() {
   });
 
   const handleStop = () => {
-    if (timeElapsed > 60) {
-      const mins = Math.round(timeElapsed / 60);
+    const mins = Math.round(timeElapsed / 60);
+    if (timeElapsed >= 30 && mins >= 1) {
+      // save at least 1 minute
       saveSession.mutate(mins);
+    } else if (timeElapsed >= 30) {
+      // less than 1 full minute but at least 30s → save as 1 min
+      saveSession.mutate(1);
     }
     stopTimer();
   };
