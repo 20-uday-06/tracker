@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Search, Filter, Plus, ExternalLink, Trash2, ChevronUp, ChevronDown, CalendarClock, BookOpenCheck, X } from "lucide-react";
+import { Search, Filter, Plus, ExternalLink, Trash2, ChevronUp, ChevronDown, CalendarClock, BookOpenCheck, X, Pencil } from "lucide-react";
 import { format, parseISO, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ResultBadge, DifficultyBadge, PlatformBadge, SourceBadge } from "@/components/shared/ResultBadge";
 import { AddProblemDialog } from "@/components/problems/AddProblemDialog";
+import { EditProblemDialog } from "@/components/problems/EditProblemDialog";
 import { NotesRenderer } from "@/components/shared/NotesEditor";
 import type { Problem, Result } from "@/lib/types";
 import { TOPICS, SOURCE_LABELS } from "@/lib/types";
@@ -182,6 +183,7 @@ export default function ProblemsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [rescheduleFor, setRescheduleFor] = useState<Problem | null>(null);
   const [notesFor, setNotesFor] = useState<Problem | null>(null);
+  const [editFor, setEditFor] = useState<Problem | null>(null);
 
   const { data: problems = [], isLoading } = useQuery<Problem[]>({
     queryKey: ["problems"],
@@ -451,6 +453,14 @@ export default function ProblemsPage() {
                       {format(parseISO(p.createdAt), "MMM d")}
                     </span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Edit button */}
+                      <button
+                        onClick={() => setEditFor(p)}
+                        className="p-1 rounded text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                        title="Edit problem"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                       {/* Reschedule / reattempt button */}
                       <button
                         onClick={() => setRescheduleFor(p)}
@@ -488,6 +498,14 @@ export default function ProblemsPage() {
 
       {notesFor && (
         <NotesModal problem={notesFor} onClose={() => setNotesFor(null)} />
+      )}
+
+      {editFor && (
+        <EditProblemDialog
+          problem={editFor}
+          open={!!editFor}
+          onOpenChange={(open) => { if (!open) setEditFor(null); }}
+        />
       )}
     </div>
   );
