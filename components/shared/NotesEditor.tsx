@@ -5,6 +5,8 @@ import { Eye, Edit3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -28,6 +30,7 @@ function MarkdownPreview({ text }: { text: string }) {
   return (
     <div className="px-3 py-2.5 min-h-[96px] prose prose-sm prose-invert max-w-none prose-pre:p-0 prose-pre:bg-transparent prose-pre:my-2 prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:text-sm prose-headings:text-zinc-100 prose-a:text-indigo-400 prose-strong:text-zinc-100">
       <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
