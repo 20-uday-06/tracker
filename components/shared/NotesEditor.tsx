@@ -23,8 +23,9 @@ function renderMarkdown(text: string): string {
   if (!text) return "<p class=\"text-zinc-600 italic text-xs\">No notes yet.</p>";
   return text
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/```([\s\S]*?)```/g, "<pre class=\"bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-cyan-300 my-2 overflow-x-auto whitespace-pre\">$1</pre>")
-    .replace(/`([^`]+)`/g, "<code class=\"bg-zinc-900 text-cyan-300 px-1 rounded text-xs font-mono\">$1</code>")
+    .replace(/```(?:[a-z0-9]*)?\n([\s\S]*?)```/g, "<pre class=\"bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-300 my-2 overflow-x-auto whitespace-pre\">$1</pre>")
+    .replace(/```([\s\S]*?)```/g, "<pre class=\"bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-300 my-2 overflow-x-auto whitespace-pre\">$1</pre>")
+    .replace(/`([^`]+)`/g, "<code class=\"bg-zinc-900 text-zinc-300 px-1 rounded text-xs font-mono\">$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong class=\"text-zinc-100 font-semibold\">$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em class=\"text-violet-300\">$1</em>")
     .replace(/^### (.+)$/gm, "<h3 class=\"text-sm font-semibold text-zinc-200 mt-3 mb-1\">$1</h3>")

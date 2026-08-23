@@ -3,11 +3,12 @@
 // All CodeMirror imports are isolated here so they NEVER touch SSR
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
 import { tags as t } from "@lezer/highlight";
 import { EditorView } from "@codemirror/view";
 import { createTheme } from "@uiw/codemirror-themes";
 
-// ── DSA-themed dark palette ────────────────────────────────────────────────────
+// ── DSA-themed dark palette (VS Code style syntax highlighting) ──────────────
 const dsaTheme = createTheme({
   theme: "dark",
   settings: {
@@ -21,22 +22,32 @@ const dsaTheme = createTheme({
     gutterForeground: "#52525b",
   },
   styles: [
+    // Markdown basics
     { tag: t.heading1,              color: "#f4f4f5", fontWeight: "700", fontSize: "1.05em" },
     { tag: t.heading2,              color: "#e4e4e7", fontWeight: "700" },
     { tag: t.heading3,              color: "#d4d4d8", fontWeight: "600" },
     { tag: t.strong,                color: "#f4f4f5", fontWeight: "700" },
-    { tag: t.emphasis,              color: "#c4b5fd", fontStyle: "italic" },   // violet italic
-    { tag: t.monospace,             color: "#67e8f9", fontFamily: "monospace" }, // cyan code
-    { tag: t.string,                color: "#86efac" },                         // green strings
-    { tag: t.list,                  color: "#818cf8" },                         // indigo bullets
+    { tag: t.emphasis,              color: "#c4b5fd", fontStyle: "italic" },
+    { tag: t.list,                  color: "#818cf8" },
     { tag: t.quote,                 color: "#a1a1aa", fontStyle: "italic" },
     { tag: t.link,                  color: "#38bdf8", textDecoration: "underline" },
     { tag: t.url,                   color: "#38bdf8" },
     { tag: t.processingInstruction, color: "#6366f1" },  // ## ** ` markers
-    { tag: t.operator,              color: "#6366f1" },
-    { tag: t.punctuation,           color: "#6366f1" },
-    { tag: t.meta,                  color: "#6366f1" },
-    { tag: t.comment,               color: "#52525b", fontStyle: "italic" },
+    
+    // Code Syntax Highlighting (VS Code One Dark inspired)
+    { tag: t.keyword,               color: "#c678dd" }, // Purple for keywords (if, return, int, const)
+    { tag: t.function(t.variableName), color: "#61afef" }, // Blue for function names
+    { tag: t.variableName,          color: "#e06c75" }, // Red/Pink for variables
+    { tag: t.propertyName,          color: "#e06c75" }, // Red/Pink for properties
+    { tag: t.className,             color: "#e5c07b" }, // Yellow for classes
+    { tag: t.typeName,              color: "#e5c07b" }, // Yellow for types
+    { tag: t.string,                color: "#98c379" }, // Green for strings
+    { tag: t.number,                color: "#d19a66" }, // Orange for numbers
+    { tag: t.bool,                  color: "#d19a66" }, // Orange for booleans
+    { tag: t.operator,              color: "#56b6c2" }, // Cyan for operators (+, -, =)
+    { tag: t.punctuation,           color: "#abb2bf" }, // Gray for punctuation ({, }, ;)
+    { tag: t.comment,               color: "#5c6370", fontStyle: "italic" }, // Dim italic for comments
+    { tag: t.meta,                  color: "#61afef" }, // Includes #include, annotations
   ],
 });
 
@@ -64,7 +75,11 @@ export default function CodeMirrorEditor({ value, onChange, placeholder, rows = 
       value={value}
       onChange={onChange}
       theme={dsaTheme}
-      extensions={[markdown(), EditorView.lineWrapping, editorTheme]}
+      extensions={[
+        markdown({ codeLanguages: languages }), 
+        EditorView.lineWrapping, 
+        editorTheme
+      ]}
       placeholder={placeholder}
       minHeight={`${rows * 24}px`}
       basicSetup={{
@@ -73,8 +88,8 @@ export default function CodeMirrorEditor({ value, onChange, placeholder, rows = 
         dropCursor:               false,
         allowMultipleSelections:  false,
         indentOnInput:            true,
-        bracketMatching:          false,
-        closeBrackets:            false,
+        bracketMatching:          true,
+        closeBrackets:            true,
         autocompletion:           false,
         highlightActiveLine:      false,
         highlightSelectionMatches:false,
