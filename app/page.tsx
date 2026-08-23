@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { Flame, BookOpen, Clock, Target, Plus, TrendingUp, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Flame, BookOpen, Clock, Target, Plus, TrendingUp, RefreshCw, CheckSquare, Square, ArrowRight } from "lucide-react";
+import { useState, useRef } from "react";
 import {
   calculateStreak, getTodayStats, getHeatmapData,
   getGreeting, getMotivationalSuffix, formatMinutes,
@@ -47,7 +47,10 @@ function MetricCard({ icon: Icon, label, value, sub, color = "text-zinc-400", on
 export default function DashboardPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<{ data: DayActivity | null; date: string } | null>(null);
+  const [newTodo, setNewTodo] = useState("");
+  const todoInputRef = useRef<HTMLInputElement>(null);
   const { hour: dayStartHour } = useDayStartHour();
+  const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["stats"],
@@ -57,6 +60,36 @@ export default function DashboardPage() {
   const { data: targets } = useQuery({
     queryKey: ["targets"],
     queryFn: () => fetch("/api/targets").then((r) => r.json()),
+  });
+
+  const { data: todos = [] } = useQuery({
+    queryKey: ["todos"],
+    queryFn: () => fetch("/api/todos").then((r) => r.json()),
+  });
+
+  const todayTodos = (todos as any[]).filter((t: any) => t.category === "today");
+
+  const toggleTodo = useMutation({
+    mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
+      fetch(`/api/todos`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, completed }),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todos"] }),
+  });
+
+  const addTodo = useMutation({
+    mutationFn: (text: string) =>
+      fetch("/api/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, category: "today" }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["todos"] });
+      setNewTodo("");
+    },
   });
 
   const problems: Problem[] = data?.problems ?? [];
@@ -264,6 +297,77 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Today's Todos */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-3.5 h-3.5 text-indigo-400" />
+              <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Today's Tasks</h2>
+              {todayTodos.length > 0 && (
+                <span className="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+                  {todayTodos.filter((t: any) => t.completed).length}/{todayTodos.length}
+                </span>
+              )}
+            </div>
+            <a href="/todos" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
+              Full list <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
+
+          <div className="bg-[#111113] border border-zinc-800 rounded-lg overflow-hidden">
+            {/* Quick add input */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-800/60">
+              <Plus className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+              <input
+                ref={todoInputRef}
+                type="text"
+                value={newTodo}
+                onChange={(e) => setNewTodo(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newTodo.trim()) {
+                    addTodo.mutate(newTodo.trim());
+                  }
+                }}
+                placeholder="Add a task for today... (Enter to add)"
+                className="flex-1 bg-transparent text-sm text-zinc-300 placeholder-zinc-700 focus:outline-none"
+              />
+            </div>
+
+            {/* Todo list */}
+            {todayTodos.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <p className="text-xs text-zinc-600">No tasks for today. Add one above ↑</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-zinc-800/40">
+                {todayTodos.map((todo: any) => (
+                  <button
+                    key={todo.id}
+                    type="button"
+                    onClick={() => toggleTodo.mutate({ id: todo.id, completed: !todo.completed })}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/25 transition-colors text-left group"
+                  >
+                    {todo.completed ? (
+                      <CheckSquare className="w-4 h-4 text-indigo-500 shrink-0" />
+                    ) : (
+                      <Square className="w-4 h-4 text-zinc-600 shrink-0 group-hover:text-zinc-500 transition-colors" />
+                    )}
+                    <span className={cn(
+                      "text-sm flex-1 transition-colors",
+                      todo.completed ? "line-through text-zinc-600" : "text-zinc-300"
+                    )}>
+                      {todo.text}
+                    </span>
+                    {todo.completed && (
+                      <span className="text-[10px] text-zinc-700 shrink-0">done</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Weekly Recap */}
         <WeeklyRecap problems={problems} sessions={sessions} />
