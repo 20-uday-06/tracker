@@ -56,6 +56,7 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
   const [company, setCompany] = useState("");                // for CompanyPYQ
   const [companySuggestions, setCompanySuggestions] = useState<string[]>([]);
   const [showCompanySugg, setShowCompanySugg] = useState(false);
+  const [companyHighlight, setCompanyHighlight] = useState(-1);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<Difficulty | "">("");
   const [cfRating, setCfRating] = useState<number | "">("");
@@ -85,6 +86,7 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
     setCompany("");
     setCompanySuggestions([]);
     setShowCompanySugg(false);
+    setCompanyHighlight(-1);
     setSelectedTopics([]);
     setDifficulty("");
     setCfRating("");
@@ -276,6 +278,7 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
                     onChange={(e) => {
                       const val = e.target.value;
                       setCompany(val);
+                      setCompanyHighlight(-1);
                       if (val.length >= 1) {
                         const matches = KNOWN_COMPANIES.filter((c) =>
                           c.toLowerCase().startsWith(val.toLowerCase())
@@ -286,20 +289,43 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
                         setShowCompanySugg(false);
                       }
                     }}
-                    onBlur={() => setTimeout(() => setShowCompanySugg(false), 150)}
+                    onKeyDown={(e) => {
+                      if (!showCompanySugg || companySuggestions.length === 0) return;
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setCompanyHighlight((h) => Math.min(h + 1, companySuggestions.length - 1));
+                      } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setCompanyHighlight((h) => Math.max(h - 1, 0));
+                      } else if (e.key === "Enter" && companyHighlight >= 0) {
+                        e.preventDefault();
+                        setCompany(companySuggestions[companyHighlight]);
+                        setShowCompanySugg(false);
+                        setCompanyHighlight(-1);
+                      } else if (e.key === "Escape") {
+                        setShowCompanySugg(false);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => { setShowCompanySugg(false); setCompanyHighlight(-1); }, 150)}
                     placeholder="Company name (e.g. Amazon)"
                     className="w-full px-3 py-2 bg-zinc-900 border border-amber-500/40 rounded-md text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/60 transition-colors"
                   />
                   {showCompanySugg && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-md shadow-xl z-20 overflow-hidden">
-                      {companySuggestions.map((c) => (
+                      {companySuggestions.map((c, i) => (
                         <button
                           key={c}
                           type="button"
-                          className="w-full px-3 py-2 text-left text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                          className={cn(
+                            "w-full px-3 py-2 text-left text-sm transition-colors",
+                            i === companyHighlight
+                              ? "bg-amber-500/15 text-amber-300"
+                              : "text-zinc-300 hover:bg-zinc-800"
+                          )}
                           onMouseDown={() => {
                             setCompany(c);
                             setShowCompanySugg(false);
+                            setCompanyHighlight(-1);
                           }}
                         >{c}</button>
                       ))}

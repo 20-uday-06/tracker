@@ -436,9 +436,12 @@ export default function ProblemsPage() {
                       </span>
                     )}
                   </div>
-                  <PlatformBadge platform={p.platform} />
-                  <SourceBadge source={p.source} />
-                  {p.company && <CompanyBadge company={p.company} />}
+                  {/* Platform + Source + Company grouped — keeps grid at 7 cols always */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <PlatformBadge platform={p.platform} />
+                    <SourceBadge source={p.source} />
+                    {p.company && <CompanyBadge company={p.company} />}
+                  </div>
                   <span className="text-xs text-zinc-600 hidden lg:block">
                     {p.topics.slice(0, 2).join(", ")}
                   </span>
