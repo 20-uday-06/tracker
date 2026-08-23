@@ -17,6 +17,7 @@ model Problem {
   difficulty String?
   cfRating   Int?
   url        String?
+  company    String?
   createdAt  DateTime   @default(now())
   attempts   Attempt[]
   reattempt  Reattempt?

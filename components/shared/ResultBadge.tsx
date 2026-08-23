@@ -77,10 +77,13 @@ export function DifficultyBadge({
 
 export function PlatformBadge({ platform }: { platform: string }) {
   const classes: Record<string, string> = {
-    LeetCode: "text-orange-400",
-    Codeforces: "text-blue-400",
-    CSES: "text-emerald-400",
-    Other: "text-zinc-400",
+    LeetCode:    "text-orange-400",
+    Codeforces:  "text-blue-400",
+    CSES:        "text-emerald-400",
+    GFG:         "text-green-500",
+    Code360:     "text-purple-400",
+    InterviewBit:"text-cyan-400",
+    Other:       "text-zinc-400",
   };
   return (
     <span className={cn("text-xs font-medium", classes[platform] || "text-zinc-400")}>
@@ -92,12 +95,22 @@ export function PlatformBadge({ platform }: { platform: string }) {
 export function SourceBadge({ source }: { source: string }) {
   const labels: Record<string, string> = {
     NeetCode150: "NeetCode",
-    StriverSDE: "Striver",
-    CP31: "CP-31",
-    CSES: "CSES",
-    Custom: "Custom",
+    StriverSDE:  "Striver",
+    CP31:        "CP-31",
+    CSES:        "CSES",
+    CompanyPYQ:  "PYQ",
+    Custom:      "Custom",
   };
   return (
     <span className="text-xs text-zinc-500">{labels[source] || source}</span>
+  );
+}
+
+export function CompanyBadge({ company }: { company?: string | null }) {
+  if (!company) return null;
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+      {company}
+    </span>
   );
 }

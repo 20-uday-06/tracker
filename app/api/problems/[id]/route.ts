@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const { title, platform, source, topics, difficulty, cfRating, url } = body;
+  const { title, platform, source, topics, difficulty, cfRating, url, company } = body;
   const problem = await prisma.problem.update({
     where: { id },
     data: {
@@ -32,6 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(difficulty !== undefined && { difficulty: difficulty || null }),
       ...(cfRating !== undefined && { cfRating: cfRating ? parseInt(cfRating) : null }),
       ...(url !== undefined && { url: url || null }),
+      ...(company !== undefined && { company: company || null }),
     },
     include: { attempts: { orderBy: { attemptedAt: "asc" } }, reattempt: true },
   });

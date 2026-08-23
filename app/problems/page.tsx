@@ -5,7 +5,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Search, Filter, Plus, ExternalLink, Trash2, ChevronUp, ChevronDown, CalendarClock, BookOpenCheck, X, Pencil } from "lucide-react";
 import { format, parseISO, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ResultBadge, DifficultyBadge, PlatformBadge, SourceBadge } from "@/components/shared/ResultBadge";
+import { ResultBadge, DifficultyBadge, PlatformBadge, SourceBadge, CompanyBadge } from "@/components/shared/ResultBadge";
 import { AddProblemDialog } from "@/components/problems/AddProblemDialog";
 import { EditProblemDialog } from "@/components/problems/EditProblemDialog";
 import { NotesRenderer } from "@/components/shared/NotesEditor";
@@ -438,6 +438,7 @@ export default function ProblemsPage() {
                   </div>
                   <PlatformBadge platform={p.platform} />
                   <SourceBadge source={p.source} />
+                  {p.company && <CompanyBadge company={p.company} />}
                   <span className="text-xs text-zinc-600 hidden lg:block">
                     {p.topics.slice(0, 2).join(", ")}
                   </span>

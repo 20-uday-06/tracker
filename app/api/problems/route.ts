@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const {
     title, platform, source, topics, difficulty, cfRating,
-    url, result, timeSpent, learningNote, addToReattempt, reattemptDueDate,
+    url, result, timeSpent, learningNote, addToReattempt, reattemptDueDate, company,
   } = body;
 
   const problem = await prisma.problem.create({
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       difficulty: difficulty || null,
       cfRating: cfRating ? parseInt(cfRating) : null,
       url: url || null,
+      company: company || null,
       attempts: {
         create: {
           result,

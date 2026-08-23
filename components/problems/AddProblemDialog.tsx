@@ -9,10 +9,18 @@ import { TOPICS, SOURCE_LABELS } from "@/lib/types";
 import { addDays, format } from "date-fns";
 import { NotesEditor } from "@/components/shared/NotesEditor";
 
-const PLATFORMS: Platform[] = ["LeetCode", "Codeforces", "CSES", "Other"];
-const SOURCES: Source[] = ["NeetCode150", "StriverSDE", "CP31", "CSES", "Custom"];
+const PLATFORMS = ["LeetCode", "Codeforces", "GFG", "Code360", "InterviewBit", "CSES", "Other"] as const;
+const SOURCES = ["NeetCode150", "StriverSDE", "CP31", "CSES", "CompanyPYQ", "Custom"] as const;
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 const CF_RATINGS = [800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700];
+
+// Well-known companies for autocomplete
+const KNOWN_COMPANIES = [
+  "Amazon", "Google", "Microsoft", "Meta", "Apple", "Adobe", "Flipkart",
+  "Uber", "Walmart", "Goldman Sachs", "Morgan Stanley", "Salesforce",
+  "Atlassian", "Razorpay", "Zomato", "Swiggy", "Paytm", "PhonePe",
+  "Infosys", "TCS", "Wipro", "Zoho", "OYO", "CRED",
+];
 
 const RESULT_OPTIONS: { value: Result; label: string; emoji: string; color: string }[] = [
   { value: "Independent", label: "Independent", emoji: "🟢", color: "border-green-500/40 bg-green-500/10 text-green-400 hover:bg-green-500/20" },
@@ -42,8 +50,12 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
   const titleRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
-  const [platform, setPlatform] = useState<Platform>("LeetCode");
-  const [source, setSource] = useState<Source>("NeetCode150");
+  const [platform, setPlatform] = useState<string>("LeetCode");
+  const [customPlatform, setCustomPlatform] = useState("");  // for "Other"
+  const [source, setSource] = useState<string>("NeetCode150");
+  const [company, setCompany] = useState("");                // for CompanyPYQ
+  const [companySuggestions, setCompanySuggestions] = useState<string[]>([]);
+  const [showCompanySugg, setShowCompanySugg] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<Difficulty | "">("");
   const [cfRating, setCfRating] = useState<number | "">("");
@@ -69,6 +81,10 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
   // Reset form when closed
   const resetForm = useCallback(() => {
     setTitle("");
+    setCustomPlatform("");
+    setCompany("");
+    setCompanySuggestions([]);
+    setShowCompanySugg(false);
     setSelectedTopics([]);
     setDifficulty("");
     setCfRating("");
@@ -117,12 +133,13 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          platform,
+          platform: platform === "Other" && customPlatform.trim() ? customPlatform.trim() : platform,
           source,
           topics: selectedTopics,
           difficulty: difficulty || null,
           cfRating: cfRating || null,
           url,
+          company: source === "CompanyPYQ" ? (company.trim() || null) : null,
           result,
           timeSpent,
           learningNote,
@@ -205,27 +222,91 @@ export function AddProblemDialog({ open, onOpenChange }: AddProblemDialogProps) 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">Platform</label>
-              <select
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value as Platform)}
-                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-zinc-100 focus:outline-none focus:border-indigo-500/60 appearance-none cursor-pointer"
-              >
+              <div className="flex flex-wrap gap-1.5">
                 {PLATFORMS.map((p) => (
-                  <option key={p} value={p}>{p}</option>
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPlatform(p)}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-md text-xs border transition-all",
+                      platform === p
+                        ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-400"
+                        : "border-zinc-700 bg-zinc-900 text-zinc-500 hover:border-zinc-600"
+                    )}
+                  >{p}</button>
                 ))}
-              </select>
+              </div>
+              {platform === "Other" && (
+                <input
+                  type="text"
+                  value={customPlatform}
+                  onChange={(e) => setCustomPlatform(e.target.value)}
+                  placeholder="e.g. Reddit, Telegram..."
+                  className="mt-2 w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500/60 transition-colors"
+                />
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">Source / Sheet</label>
-              <select
-                value={source}
-                onChange={(e) => setSource(e.target.value as Source)}
-                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-zinc-100 focus:outline-none focus:border-indigo-500/60 appearance-none cursor-pointer"
-              >
+              <div className="flex flex-wrap gap-1.5">
                 {SOURCES.map((s) => (
-                  <option key={s} value={s}>{SOURCE_LABELS[s]}</option>
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSource(s)}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-md text-xs border transition-all",
+                      source === s
+                        ? s === "CompanyPYQ"
+                          ? "border-amber-500/50 bg-amber-500/15 text-amber-400"
+                          : "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
+                        : "border-zinc-700 bg-zinc-900 text-zinc-500 hover:border-zinc-600"
+                    )}
+                  >{SOURCE_LABELS[s] || s}</button>
                 ))}
-              </select>
+              </div>
+
+              {/* Company autocomplete — shown only when CompanyPYQ selected */}
+              {source === "CompanyPYQ" && (
+                <div className="mt-2 relative">
+                  <input
+                    type="text"
+                    value={company}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCompany(val);
+                      if (val.length >= 1) {
+                        const matches = KNOWN_COMPANIES.filter((c) =>
+                          c.toLowerCase().startsWith(val.toLowerCase())
+                        );
+                        setCompanySuggestions(matches);
+                        setShowCompanySugg(matches.length > 0);
+                      } else {
+                        setShowCompanySugg(false);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setShowCompanySugg(false), 150)}
+                    placeholder="Company name (e.g. Amazon)"
+                    className="w-full px-3 py-2 bg-zinc-900 border border-amber-500/40 rounded-md text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/60 transition-colors"
+                  />
+                  {showCompanySugg && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-md shadow-xl z-20 overflow-hidden">
+                      {companySuggestions.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className="w-full px-3 py-2 text-left text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+                          onMouseDown={() => {
+                            setCompany(c);
+                            setShowCompanySugg(false);
+                          }}
+                        >{c}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

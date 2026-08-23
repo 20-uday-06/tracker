@@ -290,7 +290,7 @@ function CP31Panel({ problems }: { problems: Problem[] }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-type Tab = "neetcode" | "striver" | "cp31";
+type Tab = "neetcode" | "striver" | "cp31" | "company";
 
 export default function ProgressPage() {
   const [tab, setTab] = useState<Tab>("neetcode");
@@ -305,6 +305,27 @@ export default function ProgressPage() {
   const ncProblems = problems.filter((p) => p.source === "NeetCode150");
   const striverProblems = problems.filter((p) => p.source === "StriverSDE");
   const cp31Problems = problems.filter((p) => p.source === "CP31");
+  const companyProblems = problems.filter((p) => p.source === "CompanyPYQ" || p.company);
+
+  // Per-company stats
+  const companyMap: Record<string, { total: number; ind: number; topics: Set<string> }> = {};
+  for (const p of companyProblems) {
+    const co = p.company || "Unknown";
+    if (!companyMap[co]) companyMap[co] = { total: 0, ind: 0, topics: new Set() };
+    companyMap[co].total++;
+    const latest = p.attempts[p.attempts.length - 1];
+    if (latest?.result === "Independent" || latest?.result === "Struggled") companyMap[co].ind++;
+    p.topics.forEach((t) => companyMap[co].topics.add(t));
+  }
+  const companyStats = Object.entries(companyMap)
+    .map(([name, d]) => ({
+      name,
+      total: d.total,
+      ind: d.ind,
+      indRate: d.total > 0 ? Math.round((d.ind / d.total) * 100) : 0,
+      topics: [...d.topics].slice(0, 4),
+    }))
+    .sort((a, b) => b.total - a.total);
 
   // NeetCode counts
   const neetcodeCounts: Record<string, number> = {};
@@ -340,6 +361,7 @@ export default function ProgressPage() {
     { id: "neetcode" as Tab, label: "NeetCode 150", count: ncProblems.length, total: 150, color: "text-indigo-400", pctVal: pct(ncProblems.length, 150) },
     { id: "striver" as Tab, label: "Striver SDE Sheet", count: striverProblems.length, total: 191, color: "text-emerald-400", pctVal: pct(striverProblems.length, 191) },
     { id: "cp31" as Tab, label: "CP-31 Journey", count: cp31Problems.length, total: null, color: "text-amber-400", pctVal: null },
+    { id: "company" as Tab, label: "Company PYQs", count: companyProblems.length, total: null, color: "text-rose-400", pctVal: null },
   ];
 
   if (isLoading) {
@@ -434,6 +456,54 @@ export default function ProgressPage() {
           )}
           {tab === "cp31" && (
             <CP31Panel problems={cp31Problems} />
+          )}
+          {tab === "company" && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-base font-semibold text-zinc-100">Company PYQs</h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">{companyProblems.length} problems tagged across {companyStats.length} companies</p>
+                </div>
+              </div>
+              {companyStats.length === 0 ? (
+                <div className="text-center py-16 bg-[#111113] border border-zinc-800 rounded-lg">
+                  <p className="text-3xl mb-3">🏢</p>
+                  <p className="text-sm font-medium text-zinc-300">No company PYQs yet</p>
+                  <p className="text-xs text-zinc-600 mt-1">Add problems with source "Company PYQ" and tag the company name</p>
+                  <button onClick={() => setAddOpen(true)} className="mt-4 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors">
+                    + Add your first PYQ
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {companyStats.map((c) => (
+                    <div key={c.name} className="bg-[#111113] border border-zinc-800 rounded-lg px-5 py-4 hover:border-zinc-700 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-32 shrink-0">
+                          <p className="text-sm font-semibold text-zinc-100">{c.name}</p>
+                          <p className="text-[10px] text-zinc-600 mt-0.5">{c.topics.join(", ") || "No topics"}</p>
+                        </div>
+                        <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${c.indRate}%`,
+                              backgroundColor: c.indRate >= 70 ? "#22c55e" : c.indRate >= 40 ? "#eab308" : "#f97316",
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0 text-xs">
+                          <span className="text-zinc-400 font-mono-num">{c.total} solved</span>
+                          <span className={cn("font-mono-num font-semibold w-12 text-right",
+                            c.indRate >= 70 ? "text-green-400" : c.indRate >= 40 ? "text-yellow-400" : "text-orange-400"
+                          )}>{c.indRate}% ind.</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

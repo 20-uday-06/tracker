@@ -1,17 +1,18 @@
 export type Result = "Independent" | "Struggled" | "Hint" | "Solution";
-export type Platform = "LeetCode" | "Codeforces" | "CSES" | "Other";
-export type Source = "NeetCode150" | "StriverSDE" | "CP31" | "CSES" | "Custom";
+export type Platform = "LeetCode" | "Codeforces" | "CSES" | "GFG" | "Code360" | "InterviewBit" | "Other";
+export type Source = "NeetCode150" | "StriverSDE" | "CP31" | "CSES" | "CompanyPYQ" | "Custom";
 export type Difficulty = "Easy" | "Medium" | "Hard";
 
 export interface Problem {
   id: string;
   title: string;
-  platform: Platform;
-  source: Source;
+  platform: string;        // string (not union) — supports custom "Other" platform names
+  source: string;
   topics: string[];
   difficulty?: Difficulty | null;
   cfRating?: number | null;
   url?: string | null;
+  company?: string | null; // e.g. "Amazon", "Google"
   createdAt: string;
   attempts: Attempt[];
   reattempt?: Reattempt | null;
@@ -91,6 +92,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   StriverSDE: "Striver SDE",
   CP31: "CP-31",
   CSES: "CSES",
+  CompanyPYQ: "Company PYQ",
   Custom: "Custom",
   Reattempt: "Reattempt",
   Generic: "Generic",
