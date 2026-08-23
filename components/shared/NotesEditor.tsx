@@ -86,10 +86,7 @@ export function NotesEditor({
 
       {/* Preview mode */}
       {mode === "preview" && (
-        <div
-          className="px-3 py-2.5 min-h-[96px]"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
-        />
+        <CodeMirrorEditor value={value} readOnly={true} rows={rows} />
       )}
     </div>
   );
@@ -97,10 +94,10 @@ export function NotesEditor({
 
 /** Read-only markdown renderer for the notes popup */
 export function NotesRenderer({ text }: { text: string }) {
+  if (!text) return <p className="text-zinc-600 italic text-xs px-3 py-2">No notes yet.</p>;
   return (
-    <div
-      className="prose-sm"
-      dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }}
-    />
+    <div className="rounded-lg border border-zinc-700 overflow-hidden bg-zinc-900/60">
+      <CodeMirrorEditor value={text} readOnly={true} />
+    </div>
   );
 }

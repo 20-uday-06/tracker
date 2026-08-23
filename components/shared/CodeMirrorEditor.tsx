@@ -4,6 +4,7 @@
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
+import { cpp } from "@codemirror/lang-cpp";
 import { tags as t } from "@lezer/highlight";
 import { EditorView } from "@codemirror/view";
 import { createTheme } from "@uiw/codemirror-themes";
@@ -64,19 +65,22 @@ const editorTheme = EditorView.theme({
 
 interface Props {
   value: string;
-  onChange: (v: string) => void;
+  onChange?: (v: string) => void;
   placeholder?: string;
   rows?: number;
+  readOnly?: boolean;
 }
 
-export default function CodeMirrorEditor({ value, onChange, placeholder, rows = 4 }: Props) {
+export default function CodeMirrorEditor({ value, onChange, placeholder, rows = 4, readOnly = false }: Props) {
   return (
     <CodeMirror
       value={value}
       onChange={onChange}
+      readOnly={readOnly}
+      editable={!readOnly}
       theme={dsaTheme}
       extensions={[
-        markdown({ codeLanguages: languages }), 
+        markdown({ codeLanguages: languages, defaultCodeLanguage: cpp() }), 
         EditorView.lineWrapping, 
         editorTheme
       ]}
@@ -87,9 +91,9 @@ export default function CodeMirrorEditor({ value, onChange, placeholder, rows = 
         foldGutter:               false,
         dropCursor:               false,
         allowMultipleSelections:  false,
-        indentOnInput:            true,
-        bracketMatching:          true,
-        closeBrackets:            true,
+        indentOnInput:            !readOnly,
+        bracketMatching:          !readOnly,
+        closeBrackets:            !readOnly,
         autocompletion:           false,
         highlightActiveLine:      false,
         highlightSelectionMatches:false,

@@ -16,6 +16,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/lang-markdown": "^6.5.2",
     "@codemirror/language-data": "^6.5.2",
     "@codemirror/theme-one-dark": "^6.1.3",
