@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Eye, Edit3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // ── Lazy-load CodeMirror (SSR incompatible, heavy bundle) ─────────────────────
 const CodeMirrorEditor = dynamic(
@@ -18,24 +21,42 @@ const CodeMirrorEditor = dynamic(
   }
 );
 
-// ── Markdown renderer (preview mode) ─────────────────────────────────────────
-function renderMarkdown(text: string): string {
-  if (!text) return "<p class=\"text-zinc-600 italic text-xs\">No notes yet.</p>";
-  return text
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/```(?:[a-z0-9]*)?\n([\s\S]*?)```/g, "<pre class=\"bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-300 my-2 overflow-x-auto whitespace-pre\">$1</pre>")
-    .replace(/```([\s\S]*?)```/g, "<pre class=\"bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-300 my-2 overflow-x-auto whitespace-pre\">$1</pre>")
-    .replace(/`([^`]+)`/g, "<code class=\"bg-zinc-900 text-zinc-300 px-1 rounded text-xs font-mono\">$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong class=\"text-zinc-100 font-semibold\">$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em class=\"text-violet-300\">$1</em>")
-    .replace(/^### (.+)$/gm, "<h3 class=\"text-sm font-semibold text-zinc-200 mt-3 mb-1\">$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2 class=\"text-sm font-bold text-zinc-100 mt-3 mb-1\">$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1 class=\"text-base font-bold text-zinc-100 mt-3 mb-1\">$1</h1>")
-    .replace(/^[-*] (.+)$/gm, "<li class=\"text-xs text-zinc-300 ml-3 list-disc list-inside\">$1</li>")
-    .replace(/^\d+\. (.+)$/gm, "<li class=\"text-xs text-zinc-300 ml-3 list-decimal list-inside\">$1</li>")
-    .replace(/\n\n+/g, "</p><p class=\"text-xs text-zinc-400 leading-relaxed mt-2\">")
-    .replace(/\n/g, "<br/>")
-    .replace(/^(?!<[hlp]|<pre|<li)(.+)$/gm, (m) => m.startsWith("<") ? m : `<span class="text-xs text-zinc-400 leading-relaxed">${m}</span>`);
+// ── Markdown Preview Component ───────────────────────────────────────────────
+function MarkdownPreview({ text }: { text: string }) {
+  if (!text) return <p className="text-zinc-600 italic text-xs px-3 py-2">No notes yet.</p>;
+
+  return (
+    <div className="px-3 py-2.5 min-h-[96px] prose prose-sm prose-invert max-w-none prose-pre:p-0 prose-pre:bg-transparent prose-pre:my-2 prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:text-sm prose-headings:text-zinc-100 prose-a:text-indigo-400 prose-strong:text-zinc-100">
+      <ReactMarkdown
+        components={{
+          code({ node, inline, className, children, ...props }: any) {
+            const match = /language-(\w+)/.exec(className || "");
+            // Default to cpp if no language specified and it's a block
+            const lang = match ? match[1] : (inline ? "" : "cpp");
+            
+            return !inline ? (
+              <SyntaxHighlighter
+                {...props}
+                style={vscDarkPlus as any}
+                language={lang}
+                PreTag="div"
+                className="rounded-md border border-zinc-700/60 !m-0 !bg-[#1e1e1e]"
+                customStyle={{ padding: "0.75rem", fontSize: "0.85em", background: "#1e1e1e" }}
+              >
+                {String(children).replace(/\n$/, "")}
+              </SyntaxHighlighter>
+            ) : (
+              <code {...props} className="bg-zinc-800 text-zinc-200 px-1.5 py-0.5 rounded text-xs font-mono">
+                {children}
+              </code>
+            );
+          }
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 interface NotesEditorProps {
@@ -86,7 +107,7 @@ export function NotesEditor({
 
       {/* Preview mode */}
       {mode === "preview" && (
-        <CodeMirrorEditor value={value} readOnly={true} rows={rows} />
+        <MarkdownPreview text={value} />
       )}
     </div>
   );
@@ -94,10 +115,9 @@ export function NotesEditor({
 
 /** Read-only markdown renderer for the notes popup */
 export function NotesRenderer({ text }: { text: string }) {
-  if (!text) return <p className="text-zinc-600 italic text-xs px-3 py-2">No notes yet.</p>;
   return (
     <div className="rounded-lg border border-zinc-700 overflow-hidden bg-zinc-900/60">
-      <CodeMirrorEditor value={text} readOnly={true} />
+      <MarkdownPreview text={text} />
     </div>
   );
 }
